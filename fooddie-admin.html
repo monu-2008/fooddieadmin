@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fooddie Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{background:linear-gradient(135deg,#FFF5E6 0%,#FFE5CC 100%);min-height:100vh}
+#splash{position:fixed;inset:0;background:linear-gradient(135deg,#FF6B35 0%,#FF8C61 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10000;transition:opacity .5s ease}
+#splash.hide{opacity:0;pointer-events:none}
+.splash-logo{font-size:64px;animation:bounce 1s ease infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+.new-order-alert{position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#FF6B35,#FF8C61);color:white;padding:20px 24px;border-radius:16px;box-shadow:0 8px 24px rgba(255,107,53,.6);font-size:18px;font-weight:800;z-index:2000;display:none;animation:pulse 1s ease-in-out infinite}
+.new-order-alert.show{display:block}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+.page{display:none}
+.page.active{display:block}
+.login-container{max-width:400px;margin:60px auto;padding:20px}
+.login-card{background:white;border-radius:24px;padding:40px 30px;box-shadow:0 8px 32px rgba(0,0,0,.1)}
+.login-logo{font-size:48px;text-align:center;margin-bottom:12px}
+.login-card h1{font-size:28px;color:#2D3436;margin-bottom:8px;text-align:center}
+.role-selector{display:flex;gap:12px;margin:24px 0}
+.role-btn{flex:1;padding:16px;border-radius:16px;border:2px solid #FFE5CC;background:white;color:#2D3436;font-size:16px;font-weight:600;cursor:pointer}
+.role-btn.active{background:linear-gradient(135deg,#FF6B35,#FF8C61);color:white;border-color:#FF6B35}
+.google-btn{width:100%;padding:16px;border-radius:16px;border:2px solid #E1E8ED;background:white;color:#2D3436;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px}
+.input-group{margin-bottom:16px}
+.input-group input{width:100%;padding:14px 16px;border-radius:12px;border:2px solid #FFE5CC;font-size:15px}
+.login-btn{width:100%;padding:16px;border-radius:16px;border:none;background:linear-gradient(135deg,#FF6B35,#FF8C61);color:white;font-size:18px;font-weight:700;cursor:pointer}
+.app{max-width:1200px;margin:0 auto;padding:20px}
+.header{background:linear-gradient(135deg,#FF6B35 0%,#FF8C61 100%);border-radius:20px;padding:24px;color:white;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;position:relative}
+.settings-icon{position:absolute;top:24px;right:24px;font-size:28px;cursor:pointer;background:rgba(255,255,255,.2);width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center}
+.header h1{font-size:28px}
+.logout-btn{background:rgba(255,255,255,.2);border:2px solid white;color:white;padding:10px 20px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:white;border-radius:16px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.stat-label{font-size:13px;color:#636E72;margin-bottom:8px;text-transform:uppercase}
+.stat-value{font-size:32px;font-weight:700;color:#2D3436}
+.stat-value.revenue{color:#44CF6C}
+.section{background:white;border-radius:16px;padding:24px;margin-bottom:20px;box-shadow:0 4px 12px rgba(0,0,0,.05)}
+.section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+.section-title{font-size:20px;font-weight:700;color:#2D3436}
+.btn-primary{background:linear-gradient(135deg,#FF6B35,#FF8C61);color:white;border:none;padding:12px 24px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer}
+.btn-secondary{background:#DFE6E9;color:#2D3436;border:none;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin-left:8px}
+.btn-acknowledge{background:linear-gradient(135deg,#FFD93D,#FFC107);color:#2D3436;border:none;padding:10px 20px;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:8px}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:16px}
+.menu-card{background:linear-gradient(135deg,#FFF5E6,white);border-radius:16px;padding:16px;border:2px solid #FFE5CC;position:relative}
+.menu-card.unavailable{opacity:.6}
+.menu-photo{width:100%;height:120px;border-radius:12px;object-fit:cover;margin-bottom:12px}
+.availability-toggle{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:8px;background:white;padding:6px 12px;border-radius:20px;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.toggle-switch{width:44px;height:24px;background:#DFE6E9;border-radius:12px;position:relative;cursor:pointer}
+.toggle-switch.active{background:#44CF6C}
+.toggle-slider{width:20px;height:20px;background:white;border-radius:50%;position:absolute;top:2px;left:2px;transition:all .3s ease;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+.toggle-switch.active .toggle-slider{left:22px}
+.order-card{background:linear-gradient(135deg,#FFF5E6,white);border-radius:16px;padding:16px;margin-bottom:12px;border-left:4px solid #FFD93D;position:relative}
+.order-card.unacknowledged{border-left-color:#FF6B35;background:linear-gradient(135deg,#FFF0E6,#FFE5D6);animation:orderPulse 2s ease-in-out infinite}
+@keyframes orderPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.02)}}
+.status-btn{flex:1;padding:8px;border-radius:8px;border:none;font-size:12px;font-weight:600;cursor:pointer}
+.status-btn.preparing{background:#FFD93D;color:#2D3436}
+.status-btn.ready{background:#44CF6C;color:white}
+.status-btn.delivered{background:#636E72;color:white}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.modal.show{display:flex}
+.modal-content{background:white;border-radius:24px;padding:24px;max-width:500px;width:100%;max-height:85vh;overflow-y:auto}
+.modal-header{font-size:22px;font-weight:700;color:#2D3436;margin-bottom:20px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:14px;font-weight:500;color:#2D3436;margin-bottom:8px}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:12px 14px;border-radius:12px;border:2px solid #FFE5CC;font-size:15px;font-family:'Poppins',sans-serif}
+.form-group textarea{resize:none;height:80px}
+.form-actions{display:flex;gap:12px;margin-top:20px}
+.form-actions button{flex:1;padding:14px;border-radius:12px;border:none;font-size:16px;font-weight:600;cursor:pointer}
+.settings-panel{position:fixed;top:0;right:-400px;width:400px;height:100vh;background:white;box-shadow:-4px 0 20px rgba(0,0,0,.2);z-index:3000;transition:right .3s ease;overflow-y:auto;padding:24px}
+.settings-panel.show{right:0}
+.settings-close{position:absolute;top:20px;right:20px;font-size:28px;cursor:pointer;color:#636E72}
+.settings-item{padding:16px;border-bottom:2px solid #F0F3F5;display:flex;justify-content:space-between;align-items:center}
+.chart-container{margin:20px 0;height:300px}
+.whatsapp-btn{background:#25D366;color:white;border:none;padding:10px 20px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px}
+.photo-upload{border:2px dashed #FFE5CC;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:16px}
+.photo-upload:hover{border-color:#FF6B35;background:#FFF5E6}
+.photo-preview{width:100%;max-height:200px;object-fit:cover;border-radius:12px;margin-bottom:12px}
+</style>
+</head>
+<body>
+
+<audio id="notificationSound" preload="auto">
+  <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBiN5xe/ejT0JFV+16+mnVBAKRp/g77NlGgc8lNn0xnMpBSl+zPLaizsIHWa76OOpVBAMUqXh8bllHAU2jdXzzn0vBil9y/DblUAKHGS76uqnUxALUKPh8bllHAU2jdXzzn0vBil9y/DblUAKHGS76uqnUxALUKPh8bllHAU2jdXzzn0vBil9y/DblUAKHGS76uqnUxALUKPh8bllHAU2jdXzzn0vBil9y/DblUAKHGS76uqnUxALUKPh8bllHAU2jdXzzn0vBil9y/DblUAKHGS76uqnUxAL" type="audio/wav">
+</audio>
+
+<div class="new-order-alert" id="newOrderAlert">
+  <span style="font-size:24px;animation:ring .5s ease infinite">🔔</span>
+  <span id="alertText">New Orders!</span>
+  <span style="background:white;color:#FF6B35;padding:4px 12px;border-radius:12px;font-size:16px;margin-left:8px" id="alertCount">0</span>
+</div>
+
+<div id="splash">
+  <div class="splash-logo">🍔</div>
+  <div style="color:white;font-size:32px;font-weight:700;margin-top:20px">Fooddie Admin</div>
+</div>
+
+<div id="loginPage" class="page active">
+  <div class="login-container">
+    <div class="login-card">
+      <div class="login-logo">🍔</div>
+      <h1>Fooddie Cafe</h1>
+      <p style="text-align:center;color:#636E72;margin-bottom:24px">Admin Panel</p>
+
+      <div class="role-selector">
+        <button class="role-btn active" onclick="selectRole('owner')">Owner</button>
+        <button class="role-btn" onclick="selectRole('staff')">Staff</button>
+      </div>
+
+      <div id="ownerForm" style="display:block">
+        <button class="google-btn" onclick="loginWithGoogle()">
+          <svg width="20" height="20" viewBox="0 0 20 20"><path fill="#4285F4" d="M19.6 10.23c0-.82-.1-1.42-.25-2.05H10v3.72h5.5c-.15.96-.74 2.31-2.04 3.22v2.45h3.16c1.89-1.73 2.98-4.3 2.98-7.34z"/><path fill="#34A853" d="M13.46 15.13c-.83.59-1.96 1-3.46 1-2.64 0-4.88-1.74-5.68-4.15H1.07v2.52C2.72 17.75 6.09 20 10 20c2.7 0 4.96-.89 6.62-2.42l-3.16-2.45z"/><path fill="#FBBC05" d="M3.99 10c0-.69.12-1.35.32-1.97V5.51H1.07A9.973 9.973 0 000 10c0 1.61.39 3.14 1.07 4.49l3.24-2.52c-.2-.62-.32-1.28-.32-1.97z"/><path fill="#EA4335" d="M10 3.88c1.88 0 3.13.81 3.85 1.48l2.84-2.76C14.96.99 12.7 0 10 0 6.09 0 2.72 2.25 1.07 5.51l3.24 2.52C5.12 5.62 7.36 3.88 10 3.88z"/></svg>
+          Continue with Google
+        </button>
+      </div>
+
+      <div id="staffForm" style="display:none">
+        <div class="input-group">
+          <input type="password" id="staffPassword" placeholder="Enter staff password">
+        </div>
+        <button class="login-btn" onclick="login('staff')">Login as Staff</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="ownerPage" class="page">
+  <div class="app">
+    <div class="header">
+      <div>
+        <h1>🍔 Owner Dashboard</h1>
+        <p id="ownerEmail"></p>
+      </div>
+      <div class="settings-icon" onclick="toggleSettings()">⚙️</div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Today's Revenue</div>
+        <div class="stat-value revenue" id="todayRevenue">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Weekly Revenue</div>
+        <div class="stat-value revenue" id="weeklyRevenue">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Monthly Revenue</div>
+        <div class="stat-value revenue" id="monthlyRevenue">₹0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-value" id="totalOrders">0</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">📊 Analytics Dashboard</h2>
+      </div>
+      <div class="chart-container">
+        <canvas id="salesChart"></canvas>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">⭐ Daily Specials</h2>
+        <button class="btn-primary" onclick="showAddSpecial()">+ Add Special</button>
+      </div>
+      <div id="specialsList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Menu Items</h2>
+        <button class="btn-primary" onclick="showAddItem()">+ Add Item</button>
+      </div>
+      <div class="menu-grid" id="menuList"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Recent Orders</h2>
+      </div>
+      <div id="ordersList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="staffPage" class="page">
+  <div class="app">
+    <div class="header">
+      <div>
+        <h1>🍔 Kitchen Staff</h1>
+        <p>Order Management</p>
+      </div>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <h2 class="section-title">Active Orders</h2>
+      </div>
+      <div id="staffOrdersList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-close" onclick="toggleSettings()">✕</div>
+  <h2 style="font-size:24px;font-weight:800;margin-bottom:24px">⚙️ Settings</h2>
+  
+  <div class="settings-item">
+    <div>
+      <div style="font-weight:600">WhatsApp Notifications</div>
+      <div style="font-size:12px;color:#636E72">Send order alerts via WhatsApp</div>
+    </div>
+    <div class="toggle-switch" id="toggleWhatsApp" onclick="toggleFeature('whatsapp')">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+  
+  <div class="settings-item">
+    <div>
+      <div style="font-weight:600">Loyalty System</div>
+      <div style="font-size:12px;color:#636E72">Enable points for customers</div>
+    </div>
+    <div class="toggle-switch" id="toggleLoyalty" onclick="toggleFeature('loyaltySystem')">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+  
+  <div class="settings-item">
+    <div>
+      <div style="font-weight:600">Daily Specials</div>
+      <div style="font-size:12px;color:#636E72">Show special offers</div>
+    </div>
+    <div class="toggle-switch" id="toggleSpecials" onclick="toggleFeature('dailySpecials')">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+  
+  <div class="settings-item">
+    <div>
+      <div style="font-weight:600">Voice TTS</div>
+      <div style="font-size:12px;color:#636E72">Speak new orders aloud</div>
+    </div>
+    <div class="toggle-switch active" id="toggleVoice" onclick="toggleFeature('voiceTTS')">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+  
+  <div class="settings-item">
+    <div>
+      <div style="font-weight:600">Analytics Dashboard</div>
+      <div style="font-size:12px;color:#636E72">Show sales graphs</div>
+    </div>
+    <div class="toggle-switch active" id="toggleAnalytics" onclick="toggleFeature('analytics')">
+      <div class="toggle-slider"></div>
+    </div>
+  </div>
+  
+  <div style="padding:20px;border-top:2px solid #F0F3F5">
+    <div style="font-weight:600;margin-bottom:12px">Tax Rate (%)</div>
+    <input type="number" id="taxInput" placeholder="5" style="width:100%;padding:12px;border-radius:12px;border:2px solid #FFE5CC;margin-bottom:12px">
+    <button class="btn-primary" style="width:100%" onclick="updateTax()">Update Tax</button>
+  </div>
+  
+  <div style="padding:20px;border-top:2px solid #F0F3F5">
+    <div style="font-weight:600;margin-bottom:12px">Loyalty Points Rules</div>
+    <input type="number" id="pointsPerRupee" placeholder="10 points per ₹100" style="width:100%;padding:12px;border-radius:12px;border:2px solid #FFE5CC;margin-bottom:12px">
+    <button class="btn-primary" style="width:100%" onclick="updateLoyaltyRules()">Save Rules</button>
+  </div>
+</div>
+
+<div class="modal" id="addItemModal">
+  <div class="modal-content">
+    <h2 class="modal-header">Add Menu Item</h2>
+    
+    <div class="photo-upload" onclick="document.getElementById('itemPhotoInput').click()">
+      <div id="photoPreview" style="display:none">
+        <img id="photoPreviewImg" class="photo-preview">
+      </div>
+      <div id="photoPlaceholder">
+        <div style="font-size:48px;margin-bottom:12px">📸</div>
+        <div style="font-weight:600;color:#2D3436">Upload Photo</div>
+        <div style="font-size:13px;color:#636E72;margin-top:4px">Click to select image</div>
+      </div>
+      <input type="file" id="itemPhotoInput" accept="image/*" style="display:none" onchange="previewPhoto(this)">
+    </div>
+    
+    <div class="form-group">
+      <label>Item Name</label>
+      <input type="text" id="itemName" placeholder="e.g., Paneer Tikka">
+    </div>
+    <div class="form-group">
+      <label>Price (₹)</label>
+      <input type="number" id="itemPrice" placeholder="e.g., 180">
+    </div>
+    <div class="form-group">
+      <label>Category</label>
+      <select id="itemCategory">
+        <option>Starters</option>
+        <option>Main Course</option>
+        <option>Breads</option>
+        <option>Rice</option>
+        <option>Drinks</option>
+        <option>Desserts</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Icon (Emoji - if no photo)</label>
+      <input type="text" id="itemIcon" placeholder="🍲" maxlength="2">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="itemDesc" placeholder="Brief description..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button style="background:#DFE6E9;color:#2D3436" onclick="closeModal()">Cancel</button>
+      <button style="background:linear-gradient(135deg,#FF6B35,#FF8C61);color:white" onclick="addItem()">Add Item</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="addSpecialModal">
+  <div class="modal-content">
+    <h2 class="modal-header">Add Daily Special</h2>
+    
+    <div class="photo-upload" onclick="document.getElementById('specialPhotoInput').click()">
+      <div id="specialPhotoPreview" style="display:none">
+        <img id="specialPhotoPreviewImg" class="photo-preview">
+      </div>
+      <div id="specialPhotoPlaceholder">
+        <div style="font-size:48px;margin-bottom:12px">📸</div>
+        <div style="font-weight:600;color:#2D3436">Upload Photo</div>
+      </div>
+      <input type="file" id="specialPhotoInput" accept="image/*" style="display:none" onchange="previewSpecialPhoto(this)">
+    </div>
+    
+    <div class="form-group">
+      <label>Special Name</label>
+      <input type="text" id="specialName" placeholder="e.g., Chef's Special Thali">
+    </div>
+    <div class="form-group">
+      <label>Original Price (₹)</label>
+      <input type="number" id="specialOriginalPrice" placeholder="e.g., 250">
+    </div>
+    <div class="form-group">
+      <label>Special Price (₹)</label>
+      <input type="number" id="specialPrice" placeholder="e.g., 199">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="specialDesc" placeholder="What's special about it..."></textarea>
+    </div>
+    <div class="form-actions">
+      <button style="background:#DFE6E9;color:#2D3436" onclick="closeSpecialModal()">Cancel</button>
+      <button style="background:linear-gradient(135deg,#FFD93D,#FFC107);color:#2D3436" onclick="addSpecial()">Add Special</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script type="module">
+import{initializeApp}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import{getAuth,GoogleAuthProvider,signInWithPopup}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import{getDatabase,ref,push,set,onValue,get,remove,update,onChildAdded}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import{getStorage,ref as storageRef,uploadBytes,getDownloadURL}from'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+
+const firebaseConfig={apiKey:"AIzaSyCv39nv9QM6jhJD5Hz8Rrf1rR_EKCOewXk",authDomain:"dineflow-f9133.firebaseapp.com",databaseURL:"https://dineflow-f9133-default-rtdb.firebaseio.com",projectId:"dineflow-f9133",storageBucket:"dineflow-f9133.firebasestorage.app",messagingSenderId:"543639406991",appId:"1:543639406991:web:b1da8522c78d4e10f9a3fa"};
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
+const storage=getStorage(app);
+const googleProvider=new GoogleAuthProvider();
+
+const ALLOWED_EMAIL='manmohansharma002008@gmail.com';
+const STAFF_PASS='staff123';
+
+let currentRole=null,currentUser=null,soundInterval=null,unacknowledgedOrders=new Set(),menu=[],orders=[],taxRate=5,featureToggles={},salesChart=null,currentPhotoFile=null,currentSpecialPhotoFile=null;
+
+function speakEnglish(text){
+  if('speechSynthesis'in window&&featureToggles.voiceTTS){
+    const utterance=new SpeechSynthesisUtterance(text);
+    utterance.lang='en-US';
+    utterance.rate=1.0;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+setTimeout(()=>document.getElementById('splash').classList.add('hide'),2000);
+
+window.selectRole=function(role){
+  document.querySelectorAll('.role-btn').forEach(btn=>btn.classList.remove('active'));
+  event.target.classList.add('active');
+  if(role==='owner'){
+    document.getElementById('ownerForm').style.display='block';
+    document.getElementById('staffForm').style.display='none';
+  }else{
+    document.getElementById('ownerForm').style.display='none';
+    document.getElementById('staffForm').style.display='block';
+  }
+};
+
+window.loginWithGoogle=async function(){
+  try{
+    const result=await signInWithPopup(auth,googleProvider);
+    if(result.user.email!==ALLOWED_EMAIL){
+      alert('Access denied! Only owner email allowed.');
+      auth.signOut();
+      return;
+    }
+    currentUser=result.user;
+    currentRole='owner';
+    document.getElementById('ownerEmail').textContent=currentUser.email;
+    showPage('ownerPage');
+    loadOwnerDashboard();
+  }catch(error){
+    alert('Login failed: '+error.message);
+  }
+};
+
+window.login=function(role){
+  const password=document.getElementById('staffPassword').value;
+  if(password===STAFF_PASS){
+    currentRole='staff';
+    showPage('staffPage');
+    loadStaffDashboard();
+  }else{
+    alert('Invalid staff password!');
+  }
+};
+
+window.logout=function(){
+  if(currentRole==='owner')auth.signOut();
+  location.reload();
+};
+
+function showPage(pageId){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+}
+
+window.toggleSettings=function(){
+  document.getElementById('settingsPanel').classList.toggle('show');
+};
+
+window.toggleFeature=async function(feature){
+  const toggle=document.getElementById(`toggle${feature.charAt(0).toUpperCase()+feature.slice(1)}`);
+  const isActive=toggle.classList.contains('active');
+  toggle.classList.toggle('active');
+  
+  featureToggles[feature]=!isActive;
+  await update(ref(db,'fooddie/settings'),{features:featureToggles});
+};
+
+window.updateTax=async function(){
+  const tax=parseFloat(document.getElementById('taxInput').value);
+  if(isNaN(tax)||tax<0||tax>100){
+    alert('Enter valid tax rate (0-100)');
+    return;
+  }
+  await update(ref(db,'fooddie/settings'),{taxRate:tax});
+  alert('Tax rate updated!');
+};
+
+window.updateLoyaltyRules=async function(){
+  const points=parseInt(document.getElementById('pointsPerRupee').value);
+  if(isNaN(points)||points<1){
+    alert('Enter valid points per rupee');
+    return;
+  }
+  await update(ref(db,'fooddie/settings'),{loyaltyPoints:points});
+  alert('Loyalty rules updated!');
+};
+
+function loadOwnerDashboard(){
+  onValue(ref(db,'fooddie/settings'),(snap)=>{
+    if(snap.exists()){
+      const settings=snap.val();
+      taxRate=settings.taxRate||5;
+      featureToggles=settings.features||{};
+      
+      document.getElementById('taxInput').value=taxRate;
+      
+      Object.keys(featureToggles).forEach(key=>{
+        const toggle=document.getElementById(`toggle${key.charAt(0).toUpperCase()+key.slice(1)}`);
+        if(toggle){
+          if(featureToggles[key])toggle.classList.add('active');
+          else toggle.classList.remove('active');
+        }
+      });
+    }
+  });
+  
+  loadRevenue();
+  loadMenu();
+  loadOrders();
+  loadSpecials();
+  listenForNewOrders();
+  renderAnalytics();
+}
+
+function loadRevenue(){
+  onValue(ref(db,'fooddie/orders'),(snap)=>{
+    if(!snap.exists()){
+      document.getElementById('todayRevenue').textContent='₹0';
+      document.getElementById('weeklyRevenue').textContent='₹0';
+      document.getElementById('monthlyRevenue').textContent='₹0';
+      document.getElementById('totalOrders').textContent='0';
+      return;
+    }
+    
+    const now=Date.now();
+    const dayMs=24*60*60*1000;
+    let today=0,week=0,month=0,total=0;
+    
+    snap.forEach(child=>{
+      const order=child.val();
+      total++;
+      if(now-order.timestamp<dayMs)today+=order.total;
+      if(now-order.timestamp<7*dayMs)week+=order.total;
+      if(now-order.timestamp<30*dayMs)month+=order.total;
+    });
+    
+    document.getElementById('todayRevenue').textContent=`₹${today.toFixed(2)}`;
+    document.getElementById('weeklyRevenue').textContent=`₹${week.toFixed(2)}`;
+    document.getElementById('monthlyRevenue').textContent=`₹${month.toFixed(2)}`;
+    document.getElementById('totalOrders').textContent=total;
+  });
+}
+
+function renderAnalytics(){
+  const ctx=document.getElementById('salesChart');
+  if(!ctx)return;
+  
+  onValue(ref(db,'fooddie/orders'),(snap)=>{
+    const dailySales={};
+    const last7Days=[];
+    
+    for(let i=6;i>=0;i--){
+      const date=new Date();
+      date.setDate(date.getDate()-i);
+      const dateStr=date.toLocaleDateString('en-IN',{month:'short',day:'numeric'});
+      last7Days.push(dateStr);
+      dailySales[dateStr]=0;
+    }
+    
+    if(snap.exists()){
+      snap.forEach(child=>{
+        const order=child.val();
+        const orderDate=new Date(order.timestamp);
+        const dateStr=orderDate.toLocaleDateString('en-IN',{month:'short',day:'numeric'});
+        if(dailySales[dateStr]!==undefined){
+          dailySales[dateStr]+=order.total;
+        }
+      });
+    }
+    
+    if(salesChart)salesChart.destroy();
+    
+    salesChart=new Chart(ctx,{
+      type:'line',
+      data:{
+        labels:last7Days,
+        datasets:[{
+          label:'Daily Revenue (₹)',
+          data:last7Days.map(d=>dailySales[d]),
+          borderColor:'#FF6B35',
+          backgroundColor:'rgba(255,107,53,0.1)',
+          tension:0.4,
+          fill:true
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false}
+        },
+        scales:{
+          y:{beginAtZero:true}
+        }
+      }
+    });
+  });
+}
+
+function loadSpecials(){
+  onValue(ref(db,'fooddie/dailySpecials'),(snap)=>{
+    let html='';
+    if(snap.exists()){
+      snap.forEach(child=>{
+        const special=child.val();
+        const save=special.originalPrice-special.price;
+        html+=`<div style="background:#FFF5E6;padding:16px;border-radius:16px;margin-bottom:12px;display:flex;gap:12px;align-items:center">
+          ${special.photo?`<img src="${special.photo}" style="width:80px;height:80px;border-radius:12px;object-fit:cover">`:`<div style="width:80px;height:80px;border-radius:12px;background:#FFE8D6;display:flex;align-items:center;justify-content:center;font-size:32px">${special.icon||'⭐'}</div>`}
+          <div style="flex:1">
+            <div style="font-size:16px;font-weight:700">${special.name}</div>
+            <div style="font-size:13px;color:#636E72;margin:4px 0">${special.desc||''}</div>
+            <div style="font-size:18px;font-weight:700;color:#FF6B35">₹${special.price} <span style="font-size:13px;text-decoration:line-through;color:#636E72">₹${special.originalPrice}</span> <span style="font-size:12px;color:#44CF6C">Save ₹${save}!</span></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn-secondary" onclick="toggleSpecial('${child.key}',${!special.active})">${special.active?'Deactivate':'Activate'}</button>
+            <button class="btn-secondary" onclick="deleteSpecial('${child.key}')">Delete</button>
+          </div>
+        </div>`;
+      });
+    }else{
+      html='<div style="text-align:center;padding:40px;color:#636E72">No daily specials yet</div>';
+    }
+    document.getElementById('specialsList').innerHTML=html;
+  });
+}
+
+window.showAddSpecial=function(){
+  document.getElementById('addSpecialModal').classList.add('show');
+};
+
+window.closeSpecialModal=function(){
+  document.getElementById('addSpecialModal').classList.remove('show');
+  document.getElementById('specialName').value='';
+  document.getElementById('specialOriginalPrice').value='';
+  document.getElementById('specialPrice').value='';
+  document.getElementById('specialDesc').value='';
+  currentSpecialPhotoFile=null;
+  document.getElementById('specialPhotoPreview').style.display='none';
+  document.getElementById('specialPhotoPlaceholder').style.display='block';
+};
+
+window.previewSpecialPhoto=function(input){
+  if(input.files&&input.files[0]){
+    currentSpecialPhotoFile=input.files[0];
+    const reader=new FileReader();
+    reader.onload=function(e){
+      document.getElementById('specialPhotoPreviewImg').src=e.target.result;
+      document.getElementById('specialPhotoPreview').style.display='block';
+      document.getElementById('specialPhotoPlaceholder').style.display='none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+
+window.addSpecial=async function(){
+  const name=document.getElementById('specialName').value.trim();
+  const originalPrice=parseFloat(document.getElementById('specialOriginalPrice').value);
+  const price=parseFloat(document.getElementById('specialPrice').value);
+  const desc=document.getElementById('specialDesc').value.trim();
+  
+  if(!name||!originalPrice||!price){
+    alert('Fill all required fields');
+    return;
+  }
+  
+  let photoURL='';
+  if(currentSpecialPhotoFile){
+    const photoRef=storageRef(storage,`specials/${Date.now()}_${currentSpecialPhotoFile.name}`);
+    await uploadBytes(photoRef,currentSpecialPhotoFile);
+    photoURL=await getDownloadURL(photoRef);
+  }
+  
+  await push(ref(db,'fooddie/dailySpecials'),{name,originalPrice,price,desc,photo:photoURL,active:true,createdAt:Date.now()});
+  closeSpecialModal();
+  alert('Daily special added!');
+};
+
+window.toggleSpecial=async function(id,active){
+  await update(ref(db,`fooddie/dailySpecials/${id}`),{active});
+};
+
+window.deleteSpecial=async function(id){
+  if(confirm('Delete this special?')){
+    await remove(ref(db,`fooddie/dailySpecials/${id}`));
+    alert('Special deleted!');
+  }
+};
+
+window.toggleAvailability=async function(itemId,currentStatus){
+  await update(ref(db,`fooddie/menu/${itemId}`),{available:!currentStatus});
+};
+
+function loadMenu(){
+  onValue(ref(db,'fooddie/menu'),(snap)=>{
+    menu=[];
+    if(snap.exists()){
+      snap.forEach(child=>menu.push({id:child.key,...child.val()}));
+    }
+    renderMenu();
+  });
+}
+
+function renderMenu(){
+  let html='';
+  if(menu.length>0){
+    menu.forEach(item=>{
+      const isAvailable=item.available!==false;
+      html+=`<div class="menu-card ${!isAvailable?'unavailable':''}">
+        <div class="availability-toggle">
+          <span style="font-size:11px;font-weight:600;color:#636E72">${isAvailable?'Available':'Out of Stock'}</span>
+          <div class="toggle-switch ${isAvailable?'active':''}" onclick="toggleAvailability('${item.id}',${isAvailable})">
+            <div class="toggle-slider"></div>
+          </div>
+        </div>
+        ${item.photo?`<img src="${item.photo}" class="menu-photo">`:`<div style="font-size:48px;text-align:center;margin-bottom:12px">${item.icon||'🍽️'}</div>`}
+        <div style="font-size:16px;font-weight:600;margin-bottom:4px">${item.name}</div>
+        <div style="font-size:20px;font-weight:700;color:#FF6B35;margin-bottom:8px">₹${item.price}</div>
+        <div style="font-size:12px;color:#636E72;margin-bottom:12px">${item.category}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-secondary" onclick="deleteItem('${item.id}')">Delete</button>
+        </div>
+      </div>`;
+    });
+  }else{
+    html='<div style="text-align:center;padding:40px;color:#636E72">No menu items yet</div>';
+  }
+  document.getElementById('menuList').innerHTML=html;
+}
+
+window.showAddItem=function(){
+  document.getElementById('addItemModal').classList.add('show');
+};
+
+window.closeModal=function(){
+  document.getElementById('addItemModal').classList.remove('show');
+  document.getElementById('itemName').value='';
+  document.getElementById('itemPrice').value='';
+  document.getElementById('itemIcon').value='';
+  document.getElementById('itemDesc').value='';
+  currentPhotoFile=null;
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoPlaceholder').style.display='block';
+};
+
+window.previewPhoto=function(input){
+  if(input.files&&input.files[0]){
+    currentPhotoFile=input.files[0];
+    const reader=new FileReader();
+    reader.onload=function(e){
+      document.getElementById('photoPreviewImg').src=e.target.result;
+      document.getElementById('photoPreview').style.display='block';
+      document.getElementById('photoPlaceholder').style.display='none';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+};
+
+window.addItem=async function(){
+  const name=document.getElementById('itemName').value.trim();
+  const price=parseFloat(document.getElementById('itemPrice').value);
+  const category=document.getElementById('itemCategory').value;
+  const icon=document.getElementById('itemIcon').value.trim();
+  const desc=document.getElementById('itemDesc').value.trim();
+  
+  if(!name||!price){
+    alert('Fill name and price');
+    return;
+  }
+  
+  let photoURL='';
+  if(currentPhotoFile){
+    const photoRef=storageRef(storage,`menu/${Date.now()}_${currentPhotoFile.name}`);
+    await uploadBytes(photoRef,currentPhotoFile);
+    photoURL=await getDownloadURL(photoRef);
+  }
+  
+  await push(ref(db,'fooddie/menu'),{name,price,category,icon,desc,photo:photoURL,available:true});
+  closeModal();
+  alert('Item added!');
+};
+
+window.deleteItem=async function(id){
+  if(confirm('Delete this item?')){
+    await remove(ref(db,`fooddie/menu/${id}`));
+    alert('Item deleted!');
+  }
+};
+
+function listenForNewOrders(){
+  onChildAdded(ref(db,'fooddie/orders'),(snap)=>{
+    const order=snap.val();
+    const orderId=snap.key;
+    if(order.status==='pending'&&!order.acknowledged){
+      unacknowledgedOrders.add(orderId);
+      const orderInfo=order.orderType==='dine-in'?`New order from Table ${order.tableNumber}`:`New takeaway order from ${order.customerName}`;
+      speakEnglish(orderInfo);
+      startSoundNotification();
+      updateVisualAlert();
+    }
+  });
+}
+
+function startSoundNotification(){
+  if(soundInterval)return;
+  const audio=document.getElementById('notificationSound');
+  audio.play().catch(e=>console.log('Audio play failed:',e));
+  soundInterval=setInterval(()=>{
+    if(unacknowledgedOrders.size>0){
+      audio.play().catch(e=>console.log('Audio play failed:',e));
+    }else{
+      stopSoundNotification();
+    }
+  },3000);
+}
+
+function stopSoundNotification(){
+  if(soundInterval){
+    clearInterval(soundInterval);
+    soundInterval=null;
+  }
+}
+
+function updateVisualAlert(){
+  const alert=document.getElementById('newOrderAlert');
+  const count=document.getElementById('alertCount');
+  if(unacknowledgedOrders.size>0){
+    count.textContent=unacknowledgedOrders.size;
+    alert.classList.add('show');
+  }else{
+    alert.classList.remove('show');
+  }
+}
+
+window.acknowledgeOrder=async function(orderId){
+  unacknowledgedOrders.delete(orderId);
+  await update(ref(db,`fooddie/orders/${orderId}`),{acknowledged:true,acknowledgedAt:Date.now()});
+  updateVisualAlert();
+  if(unacknowledgedOrders.size===0)stopSoundNotification();
+  if(currentRole==='staff')loadStaffDashboard();
+  else loadOrders();
+};
+
+window.updateOrderStatus=async function(orderId,newStatus){
+  await update(ref(db,`fooddie/orders/${orderId}`),{orderStatus:newStatus,status:newStatus==='delivered'?'completed':'pending',[`${newStatus}At`]:Date.now()});
+};
+
+window.printBill=async function(orderId){
+  const snap=await get(ref(db,`fooddie/orders/${orderId}`));
+  if(!snap.exists())return;
+  const order=snap.val();
+  const date=new Date(order.timestamp);
+  const items=order.items.map(i=>`<tr><td>${i.name}</td><td>x${i.qty}</td><td>₹${i.price}</td><td>₹${i.qty*i.price}</td></tr>`).join('');
+  const subtotal=order.items.reduce((sum,i)=>sum+(i.qty*i.price),0);
+  const tax=order.total-subtotal;
+  
+  const html=`<div style="max-width:600px;margin:40px auto;padding:40px;font-family:'Poppins',sans-serif;border:2px solid #2D3436">
+    <div style="text-align:center;margin-bottom:30px">
+      <div style="font-size:48px;margin-bottom:10px">🍔</div>
+      <h1 style="font-size:32px;color:#FF6B35;margin-bottom:5px">Fooddie Cafe</h1>
+      <p style="color:#636E72">Fresh, Delicious, Every Time!</p>
+    </div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:20px;padding-bottom:20px;border-bottom:2px solid #DFE6E9">
+      <div><strong>Order #${order.id?order.id.slice(-6):''}</strong><br>${order.orderType==='dine-in'?`Table ${order.tableNumber}`:`Takeaway - ${order.customerName}`}</div>
+      <div style="text-align:right">${date.toLocaleDateString()}<br>${date.toLocaleTimeString()}</div>
+    </div>
+    <table style="width:100%;margin-bottom:20px">
+      <thead><tr style="border-bottom:2px solid #DFE6E9"><th style="text-align:left;padding:10px">Item</th><th style="padding:10px">Qty</th><th style="text-align:right;padding:10px">Price</th><th style="text-align:right;padding:10px">Total</th></tr></thead>
+      <tbody>${items}</tbody>
+    </table>
+    <div style="border-top:2px solid #DFE6E9;padding-top:20px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Subtotal:</span><span>₹${subtotal.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Tax:</span><span>₹${tax.toFixed(2)}</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:24px;font-weight:800;color:#FF6B35;padding-top:20px;border-top:2px solid #DFE6E9"><span>Total:</span><span>₹${order.total}</span></div>
+    </div>
+    <div style="text-align:center;margin-top:30px;padding-top:20px;border-top:2px solid #DFE6E9;color:#636E72;font-size:14px">Thank you for dining with us!<br>Visit again soon! 🙏</div>
+  </div>`;
+  
+  const printWin=window.open('','_blank');
+  printWin.document.write(html);
+  printWin.document.close();
+  printWin.print();
+};
+
+window.copyWhatsApp=function(orderId){
+  const order=orders.find(o=>o.id===orderId);
+  if(!order)return;
+  
+  const orderInfo=order.orderType==='dine-in'?`Table ${order.tableNumber}`:`Takeaway - ${order.customerName}`;
+  const items=order.items.map(i=>`${i.qty}x ${i.name}`).join('\n');
+  const message=`*New Order - Fooddie Cafe*\n\n${orderInfo}\nOrder #${orderId.slice(-6)}\n\n*Items:*\n${items}\n\n*Total:* ₹${order.total}\n*Time:* ${order.prepTime} mins`;
+  
+  navigator.clipboard.writeText(message).then(()=>{
+    alert('Order details copied! Paste in WhatsApp');
+  });
+};
+
+function loadOrders(){
+  onValue(ref(db,'fooddie/orders'),(snap)=>{
+    orders=[];
+    let html='';
+    if(snap.exists()){
+      snap.forEach(child=>orders.push({id:child.key,...child.val()}));
+      orders.sort((a,b)=>b.timestamp-a.timestamp);
+      
+      orders.slice(0,10).forEach(order=>{
+        const date=new Date(order.timestamp);
+        const items=order.items.map(i=>`${i.qty}x ${i.name}`).join(', ');
+        const orderInfo=order.orderType==='dine-in'?`🪑 Table ${order.tableNumber}`:`🥡 ${order.customerName}`;
+        const isUnacknowledged=order.status==='pending'&&!order.acknowledged;
+        const currentStatus=order.orderStatus||order.status;
+        
+        html+=`<div class="order-card ${isUnacknowledged?'unacknowledged':''}">
+          <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+            <div style="font-size:14px;font-weight:700">Order #${order.id.slice(-6)}</div>
+            <div style="font-size:12px;color:#636E72">${date.toLocaleTimeString()}</div>
+          </div>
+          <div style="background:rgba(255,107,53,.1);padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:14px;font-weight:700;color:#FF6B35">${orderInfo} ${order.prepTime?`⏱️ ${order.prepTime} mins`:''}</div>
+          <div style="font-size:13px;color:#2D3436;margin-bottom:12px">${items}</div>
+          <div style="font-size:18px;font-weight:700;color:#FF6B35;margin-bottom:12px">₹${order.total}</div>
+          ${isUnacknowledged?`<button class="btn-acknowledge" onclick="acknowledgeOrder('${order.id}')">✓ Acknowledge Order</button>`:''}
+          ${currentStatus!=='delivered'&&currentStatus!=='completed'?`<div style="display:flex;gap:8px;margin-bottom:8px">
+            <button class="status-btn preparing" onclick="updateOrderStatus('${order.id}','preparing')" ${currentStatus!=='pending'?'disabled':''}>Preparing</button>
+            <button class="status-btn ready" onclick="updateOrderStatus('${order.id}','ready')" ${currentStatus!=='preparing'?'disabled':''}>Ready</button>
+            <button class="status-btn delivered" onclick="updateOrderStatus('${order.id}','delivered')">Delivered</button>
+          </div>`:'<div style="color:#44CF6C;font-weight:600">✓ Completed</div>'}
+          <div style="display:flex;gap:8px">
+            <button style="flex:1;background:#636E72;color:white;border:none;padding:10px;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer" onclick="printBill('${order.id}')">🖨️ Print</button>
+            ${featureToggles.whatsapp?`<button class="whatsapp-btn" style="flex:1" onclick="copyWhatsApp('${order.id}')">📱 WhatsApp</button>`:''}
+          </div>
+        </div>`;
+      });
+    }else{
+      html='<div style="text-align:center;padding:40px;color:#636E72">No orders yet</div>';
+    }
+    document.getElementById('ordersList').innerHTML=html;
+  });
+}
+
+function loadStaffDashboard(){
+  listenForNewOrders();
+  onValue(ref(db,'fooddie/orders'),(snap)=>{
+    let html='';
+    if(snap.exists()){
+      const staffOrders=[];
+      snap.forEach(child=>{
+        const order=child.val();
+        if(order.status==='pending'||(order.orderStatus&&order.orderStatus!=='delivered')){
+          staffOrders.push({id:child.key,...order});
+        }
+      });
+      staffOrders.sort((a,b)=>b.timestamp-a.timestamp);
+      
+      if(staffOrders.length>0){
+        staffOrders.forEach(order=>{
+          const date=new Date(order.timestamp);
+          const items=order.items.map(i=>`${i.qty}x ${i.name}`).join(', ');
+          const orderInfo=order.orderType==='dine-in'?`🪑 Table ${order.tableNumber}`:`🥡 ${order.customerName}`;
+          const isUnacknowledged=!order.acknowledged;
+          const currentStatus=order.orderStatus||'pending';
+          
+          html+=`<div class="order-card ${isUnacknowledged?'unacknowledged':''}">
+            <div style="display:flex;justify-content:space-between;margin-bottom:12px">
+              <div style="font-size:14px;font-weight:700">Order #${order.id.slice(-6)}</div>
+              <div style="font-size:12px;color:#636E72">${date.toLocaleTimeString()}</div>
+            </div>
+            <div style="background:rgba(255,107,53,.1);padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:14px;font-weight:700;color:#FF6B35">${orderInfo} ${order.prepTime?`⏱️ ${order.prepTime} mins`:''}</div>
+            <div style="font-size:13px;color:#2D3436;margin-bottom:12px">${items}</div>
+            <div style="font-size:18px;font-weight:700;color:#FF6B35;margin-bottom:12px">₹${order.total}</div>
+            ${isUnacknowledged?`<button class="btn-acknowledge" onclick="acknowledgeOrder('${order.id}')">✓ Acknowledge Order</button>`:''}
+            <div style="display:flex;gap:8px">
+              <button class="status-btn preparing" onclick="updateOrderStatus('${order.id}','preparing')" ${currentStatus!=='pending'?'disabled':''}>Preparing</button>
+              <button class="status-btn ready" onclick="updateOrderStatus('${order.id}','ready')" ${currentStatus!=='preparing'?'disabled':''}>Ready</button>
+              <button class="status-btn delivered" onclick="updateOrderStatus('${order.id}','delivered')">Delivered</button>
+            </div>
+          </div>`;
+        });
+      }else{
+        html='<div style="text-align:center;padding:40px;color:#636E72">✓ No pending orders</div>';
+      }
+    }else{
+      html='<div style="text-align:center;padding:40px;color:#636E72">No orders yet</div>';
+    }
+    document.getElementById('staffOrdersList').innerHTML=html;
+  });
+}
+</script>
+</body>
+</html>
